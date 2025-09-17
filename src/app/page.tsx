@@ -12,7 +12,7 @@ export default function HomePage() {
                     </h1>
                 </div>
                 <a
-                    href="https://github.com/Shotix"
+                    href="https://github.com/Shotix/xslt-viewer"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-3 py-1.5 text-foreground transition-colors rounded-md hover:bg-muted/50"
