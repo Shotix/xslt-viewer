@@ -1,4 +1,3 @@
-// components/XsltTransformer.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -11,11 +10,10 @@ import {
 } from "react-resizable-panels";
 import { Download, FileText, Settings, Trash2, Files, Info } from "lucide-react";
 
-// Import Ace editor modes and themes
 import "ace-builds/src-noconflict/mode-xml";
 import "ace-builds/src-noconflict/theme-tomorrow_night";
+import xmlFormat from "xml-formatter";
 
-// Sample Data
 const sampleXML = `<?xml version="1.0" encoding="UTF-8"?>
 <catalog>
   <book id="bk101">
@@ -75,7 +73,6 @@ const sampleXSLT = `<?xml version="1.0" encoding="UTF-8"?>
 </xsl:stylesheet>
 `;
 
-// Custom hook for persisting state to localStorage (unchanged)
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
     const [storedValue, setStoredValue] = useState<T>(() => {
         if (typeof window === "undefined") {
@@ -184,14 +181,60 @@ export function XsltTransformer() {
         enableSnippets: true,
         showLineNumbers: true,
         tabSize: 2,
+        useWorker: true,
     };
 
-    const PanelHeader = ({ title, icon }: { title: string, icon: React.ReactNode }) => (
-        <div className="flex items-center gap-2 p-3 border-b border-border">
-            {icon}
-            <h2 className="font-semibold text-sm text-muted-foreground tracking-wider uppercase">{title}</h2>
+    const handlePrettyPrintXML = () => {
+        if (!xmlCode) return;
+        try {
+            const formattedXml = xmlFormat(xmlCode, {
+                indentation: '  ',
+                collapseContent: true,
+                lineSeparator: '\n'
+            });
+            setXmlCode(formattedXml);
+            setError(null);
+        } catch (e: unknown) {
+            // @ts-expect-error unknown
+            setError(`XML Formatierungsfehler: Das XML scheint nicht valide zu sein. (${e.message})`);
+        }
+    };
+
+    const handlePrettyPrintXSLT = () => {
+        if (!xsltCode) return;
+        try {
+            const formattedXslt = xmlFormat(xsltCode, {
+                indentation: '  ',
+                collapseContent: true,
+                lineSeparator: '\n'
+            });
+            setXsltCode(formattedXslt);
+            setError(null);
+        } catch (e: unknown) {
+            // @ts-expect-error unknown
+            setError(`XSLT Formatierungsfehler: Das XSLT scheint nicht valide zu sein. (${e.message})`);
+        }
+    };
+
+
+    const PanelHeader = ({
+                             title,
+                             icon,
+                             action
+                         }: {
+        title: string;
+        icon: React.ReactNode;
+        action?: React.ReactNode;
+    }) => (
+        <div className="flex items-center justify-between p-3 border-b border-border">
+            <div className="flex items-center gap-2">
+                {icon}
+                <h2 className="font-semibold text-sm text-muted-foreground tracking-wider uppercase">{title}</h2>
+            </div>
+            {action}
         </div>
     );
+
 
     const ActionButton = ({ onClick, title, children }: { onClick: () => void, title: string, children: React.ReactNode }) => (
         <button
@@ -208,7 +251,15 @@ export function XsltTransformer() {
             {/* XML Panel */}
             <Panel defaultSize={33} minSize={20}>
                 <div className="flex flex-col h-full bg-card rounded-md overflow-hidden border border-border">
-                    <PanelHeader title="XML Source" icon={<FileText className="w-4 h-4 text-muted-foreground" />} />
+                    <PanelHeader
+                        title="XML Source"
+                        icon={<FileText className="w-4 h-4 text-muted-foreground" />}
+                        action={
+                            <ActionButton onClick={handlePrettyPrintXML} title="Pretty Print XML">
+                                <FileText className="w-4 h-4" />
+                            </ActionButton>
+                        }
+                    />
                     <AceEditor
                         mode="xml"
                         theme="tomorrow_night"
@@ -230,7 +281,15 @@ export function XsltTransformer() {
             {/* XSLT Panel */}
             <Panel defaultSize={33} minSize={20}>
                 <div className="flex flex-col h-full bg-card rounded-md overflow-hidden border border-border">
-                    <PanelHeader title="XSLT Template" icon={<Settings className="w-4 h-4 text-muted-foreground" />} />
+                    <PanelHeader
+                        title="XSLT Template"
+                        icon={<Settings className="w-4 h-4 text-muted-foreground" />}
+                        action={
+                            <ActionButton onClick={handlePrettyPrintXSLT} title="Pretty Print XSLT">
+                                <FileText className={"w-4 h-4"}/>
+                            </ActionButton>
+                        }
+                    />
                     <AceEditor
                         mode="xml"
                         theme="tomorrow_night"
